@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dictionary Encryption & Decryption</title>
+</head>
+<body>
+  <h1>Encrypt & Decrypt a Runtime Dictionary</h1>
+
+  <!-- Dictionary Operations -->
+  <h2>Manage Runtime Dictionary</h2>
+  <button id="addEntryButton">Add Entry to Dictionary</button>
+  <button id="viewDictionaryButton">View Dictionary</button>
+  <p><strong>Current Dictionary:</strong></p>
+  <textarea id="dictionaryDisplay"></textarea>
+
+  <!-- Encryption Section -->
+  <h2>1. Encrypt and Store Dictionary</h2>
+  <label for="encryptKeyInput">Encryption Key (Base64):</label>
+  <input type="text" id="encryptKeyInput" placeholder="Provide a base64-encoded key" />
+  <button id="encryptDictionaryButton">Encrypt and Save</button>
+
+  <!-- Decryption Section -->
+  <h2>2. Decrypt and Load Dictionary</h2>
+  <input type="file" id="decryptFileInput" accept=".encrypted" />
+  <label for="decryptKeyInput">Decryption Key (Base64):</label>
+  <input type="text" id="decryptKeyInput" placeholder="Provide a base64-encoded key" />
+  <button id="decryptDictionaryButton">Decrypt</button>
+  <p><strong>Decrypted Dictionary:</strong></p>
+  <textarea id="decryptedDictionaryDisplay"></textarea>
+
+  <!-- BLE Write Section -->
+  <h2>3. BLE Write to GATT Server</h2>
+  <button id="bleConnectButton">Connect</button>
+  <label for="bleValueKey">Enter Key of password to Write :</label>
+  <input type="text" id="bleValueKey" />
+  <button id="bleWriteButton1">Write to BLE</button>  <p id="bleStatus"></p>
+
+  <script>
+    // Runtime Dictionary
+    const runtimeDictionary = {};
+	let device;
+	let server;
+	let scramble_offset;
+
+    // Add Entry to Dictionary
+    document.getElementById("addEntryButton").addEventListener("click", () => {
+      const key = prompt("Enter a key for the dictionary:");
+      if (!key) {
+        alert("Key cannot be empty!");
+        return;
+      }
+      const value1 = prompt("Enter the first value (string):");
+      const value2 = prompt("Enter the second value (string):");
+      const value3 = prompt("Enter the third value (string):");
+      if (value1 && value2 && value3) {
+        runtimeDictionary[key] = [value1, value2, value3];
+        updateDictionaryDisplay();
+      } else {
+        alert("All values must be provided!");
+      }
+    });
+
+    // View Current Dictionary
+    function updateDictionaryDisplay() {
+      document.getElementById("dictionaryDisplay").value = JSON.stringify(runtimeDictionary, null, 2);
+    }
+
+	document.getElementById("encryptDictionaryButton").addEventListener("click", async () => {
+	  const keyInput = document.getElementById("encryptKeyInput").value; // ASCII string as key
+	  if (!keyInput) {
+		alert("Please provide an encryption key!");
+		return;
+	  }
+	  try {
+		// Convert ASCII key to Uint8Array
+		const keyBuffer = new TextEncoder().encode(keyInput); // Direct ASCII encoding
+		const iv = crypto.getRandomValues(new Uint8Array(16)); // Generate random IV
+
+		const cryptoKey = await crypto.subtle.importKey(
+		  "raw",
+		  keyBuffer,
+		  { name: "AES-CBC" },
+		  false,
+		  ["encrypt"]
+		);
+
+		const dictionaryString = document.getElementById("dictionaryDisplay").value;
+		const encryptedData = await crypto.subtle.encrypt(
+		  { name: "AES-CBC", iv },
+		  cryptoKey,
+		  new TextEncoder().encode(dictionaryString)
+		);
+
+		// Combine IV and encrypted data into a single file
+		const combinedBuffer = new Uint8Array(iv.byteLength + encryptedData.byteLength);
+		combinedBuffer.set(iv, 0);
+		combinedBuffer.set(new Uint8Array(encryptedData), iv.byteLength);
+
+		// Save the encrypted file
+		const blob = new Blob([combinedBuffer], { type: "application/octet-stream" });
+		const link = document.createElement("a");
+		link.href = URL.createObjectURL(blob);
+		link.download = "dictionary.encrypted";
+		link.click();
+	  } catch (err) {
+		alert("Encryption failed: " + err.message);
+	  }
+	});
+
+	document.getElementById("decryptDictionaryButton").addEventListener("click", async () => {
+	  const fileInput = document.getElementById("decryptFileInput").files[0];
+	  const keyInput = document.getElementById("decryptKeyInput").value; // ASCII string as key
+
+	  if (!fileInput || !keyInput) {
+		alert("Please select a file and provide a decryption key!");
+		return;
+	  }
+
+	  try {
+		const fileBuffer = await fileInput.arrayBuffer();
+		const keyBuffer = new TextEncoder().encode(keyInput); // Direct ASCII encoding
+
+		const cryptoKey = await crypto.subtle.importKey(
+		  "raw",
+		  keyBuffer,
+		  { name: "AES-CBC" },
+		  false,
+		  ["decrypt"]
+		);
+
+		const iv = new Uint8Array(fileBuffer.slice(0, 16)); // First 16 bytes as IV
+		const encryptedData = fileBuffer.slice(16); // Rest is the ciphertext
+
+		const decryptedData = await crypto.subtle.decrypt(
+		  { name: "AES-CBC", iv },
+		  cryptoKey,
+		  encryptedData
+		);
+
+		const dictionaryString = new TextDecoder().decode(decryptedData);
+		const loadedDictionary = JSON.parse(dictionaryString);
+
+		document.getElementById("decryptedDictionaryDisplay").value = JSON.stringify(loadedDictionary, null, 2);
+	  } catch (err) {
+		alert("Decryption failed: " + err.message);
+	  }
+	});
+	
+	function isCapital ( c )
+	{
+	  if ( c == c.toUpperCase() )
+	  {
+	    return 1;
+	  }
+	  else
+	  {
+	    return 0;
+	  }
+	};
+	
+	function findKeyPresses( ch )
+	{
+	    ret = [0,0];
+		s = isCapital( ch );
+	    switch (ch.toLowerCase()) {
+		  case 'a':
+		    ret = [s, 4];
+			break;
+		  case 'b':
+		  
+		    ret = [s, 5];
+			break;
+		  case 'c':
+		    ret = [s, 6];
+			break;
+		  case 'd':
+		    ret = [s, 7];
+			break;
+		  case 'e':
+		    ret = [s, 8];
+			break;
+		  case 'f':
+		    ret = [s, 9];
+			break;
+		  case 'g':
+		    ret = [s, 10];
+			break;
+		  case 'h':
+		    ret = [s, 11];
+			break;
+		  case 'i':
+		    ret = [s, 12];
+			break;
+		  case 'j':
+		    ret = [s, 13];
+			break;
+		  case 'k':
+		    ret = [s, 14];
+			break;
+		  case 'l':
+		    ret = [s, 15];
+			break;
+		  case 'm':
+		    ret = [s, 16];
+			break;
+		  case 'n':
+		    ret = [s, 17];
+			break;
+		  case 'o':
+		    ret = [s, 18];
+			break;
+		  case 'p':
+		    ret = [s, 19];
+			break;
+		  case 'q':
+		    ret = [s, 20];
+			break;
+		  case 'r':
+		    ret = [s, 21];
+			break;
+		  case 's':
+		    ret = [s, 22];
+			break;
+		  case 't':
+		    ret = [s, 23];
+			break;
+		  case 'u':
+		    ret = [s, 24];
+			break;
+		  case 'v':
+		    ret = [s, 25];
+			break;
+		  case 'w':
+		    ret = [s, 26];
+			break;
+		  case 'x':
+		    ret = [s, 27];
+			break;
+		  case 'y':
+		    ret = [s, 28];
+			break;
+		  case 'z':
+		    ret = [s, 29];
+			break;
+		  case '0':
+		    ret = [0, 39];
+			break;
+		  case ')':
+		    ret = [1, 39];
+			break;
+		  case '1':
+		    ret = [0, 30];
+			break;
+		  case '!':
+		    ret = [1, 30];
+			break;
+		  case '2':
+		    ret = [0, 31];
+			break;
+		  case '@':
+		    ret = [1, 31];
+			break;
+		  case '3':
+		    ret = [0, 32];
+			break;
+		  case '#':
+		    ret = [1, 32];
+			break;
+		  case '4':
+		    ret = [0, 33];
+			break;
+		  case '$':
+		    ret = [1, 33];
+			break;
+		  case '5':
+		    ret = [0, 34];
+			break;
+		  case '%':
+		    ret = [1, 34];
+			break;
+		  case '6':
+		    ret = [0, 35];
+			break;
+		  case '^':
+		    ret = [1, 35];
+			break;
+		  case '7':
+		    ret = [0, 36];
+			break;
+		  case '&':
+		    ret = [1, 36];
+			break;
+		  case '8':
+		    ret = [0, 37];
+			break;
+		  case '*':
+		    ret = [1, 37];
+			break;
+		  case '9':
+		    ret = [0, 38];
+			break;
+		  case '(':
+		    ret = [1, 38];
+			break;
+		  case '-':
+		    ret = [0, 45];
+			break;
+		  case '_':
+		    ret = [1, 45];
+			break;
+		  case '=':
+		    ret = [0, 46];
+			break;
+		  case '+':
+		    ret = [1, 46];
+			break;
+		  case '[':
+		    ret = [0, 47];
+			break;
+		  case '{':
+		    ret = [1, 47];
+			break;
+		  case ']':
+		    ret = [0, 48];
+			break;
+		  case '}':
+		    ret = [1, 48];
+			break;
+		  case '\'':
+		    ret = [0, 49];
+			break;
+		  case '|':
+		    ret = [1, 49];
+			break;
+		  case ';':
+		    ret = [0, 51];
+			break;
+		  case ':':
+		    ret = [1, 51];
+			break;
+		  case '\'':
+		    ret = [0, 52];
+			break;
+		  case '"':
+		    ret = [1, 52];
+			break;
+		  case '`':
+		    ret = [0, 53];
+			break;
+		  case '~':
+		    ret = [1, 53];
+			break;
+		  case ',':
+		    ret = [0, 54];
+			break;
+		  case '<':
+		    ret = [1, 54];
+			break;
+		  case '.':
+		    ret = [0, 55];
+			break;
+		  case '>':
+		    ret = [1, 55];
+			break;
+		  case '/':
+		    ret = [0, 56];
+			break;
+		  case '?':
+		    ret = [1, 56];
+			break;
+		  default:
+		    ret = [1, 56];
+			break;
+		}
+		return ret;
+	};
+    // BLE Write Section
+	
+	async function connectAndReceiveNotifications() {
+	  try {
+
+		// Step 3: Get the desired service and characteristic
+		const service = await server.getPrimaryService("00006d17-a468-4b3e-99b0-7c1f23675454"); // Replace with your service UUID
+		const characteristic = await service.getCharacteristic("00006d18-a468-4b3e-99b0-7c1f23675454"); // Replace with your characteristic UUID
+
+		console.log("Characteristic found:", characteristic.uuid);
+
+		// Step 4: Enable notifications
+		await characteristic.startNotifications();
+		console.log("Notifications started");
+
+		// Step 5: Listen for notifications
+		characteristic.addEventListener("characteristicvaluechanged", async (event) => {
+		  const value = event.target.value; // DataView object
+		  const data = new Uint8Array(value.buffer); // Convert to Uint8Array for easy handling
+          scramble_offset = data[0];
+		  
+		  console.log("Notification received:", data);
+		  // Example: Parse multibyte data
+		  console.log("First Byte:", data[0]);
+		  
+		// Step 6: Generate encrypted text
+		const keyBytes = new TextEncoder().encode("NORDIC SEMICONDU");
+//		const keyChars = [78, 79, 82, 68, 73, 67, 32, 83, 69, 77, 73, 67, 79, 78, 68, 85];
+//		const keyBytes = new Uint8Array(keyChars);
+//        const keyBytes  = crypto.getRandomValues(new Uint8Array(16));
+		
+		const key = await window.crypto.subtle.importKey(
+			"raw",           // Key format
+			keyBytes,      // Key material (Uint8Array)
+			{ name: "AES-CBC" }, // Algorithm name
+			true,            // Whether the key is extractable
+			["encrypt"] // Key usages
+		  );
+		console.log("Key imported", key);
+		
+		const iv = new Uint8Array(16).fill(0);
+
+        const encrypted = await window.crypto.subtle.encrypt(
+			{ name: "AES-CBC", iv }, // Encryption algorithm and IV
+			key,                     // The imported key
+			data                     // Data to encrypt
+		  );
+        console.log("Encrypted data:", new Uint8Array(encrypted));
+		
+		const resCharacteristic = await service.getCharacteristic("00006d1b-a468-4b3e-99b0-7c1f23675454");
+		const bufferUint8 = new Uint8Array(encrypted);
+		await resCharacteristic.writeValue(bufferUint8);
+		
+		});
+
+	  } catch (error) {
+		console.error("Error:", error);
+	  }
+	};
+
+    document.getElementById("bleConnectButton").addEventListener("click", async () => {
+	  
+	  device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: ['00006d17-a468-4b3e-99b0-7c1f23675454'] // Adjust to your desired service
+        });
+	  server = await device.gatt.connect();
+	  
+	  // Call the function to connect and receive notifications
+      await connectAndReceiveNotifications();
+	  
+	});
+	
+    document.getElementById("bleWriteButton1").addEventListener("click", async () => {
+      const dictionaryJSON = document.getElementById("decryptedDictionaryDisplay").value;
+	  const dictionary = JSON.parse(dictionaryJSON);
+      const bleValueKey = document.getElementById("bleValueKey").value;
+      const bleStatus = document.getElementById("bleStatus");
+
+      try {
+        //const byteValues = bleValueInput.split(",").map(val => parseInt(val.trim(), 16));
+		console.log(dictionary[bleValueKey][2]);
+		//const byteValues = dictionary[bleValueKey][2].split(",").map(val => parseInt(val.trim(), 16));
+        //if (byteValues.some(isNaN)) throw new Error("Invalid byte values");
+
+
+        const service = await server.getPrimaryService('00006d17-a468-4b3e-99b0-7c1f23675454'); // Adjust to your desired service
+        const modCharacteristic = await service.getCharacteristic('00006d1a-a468-4b3e-99b0-7c1f23675454'); // Adjust to your desired characteristic
+        const keyCharacteristic = await service.getCharacteristic('00006d19-a468-4b3e-99b0-7c1f23675454'); // Adjust to your desired characteristic
+
+        for ( const c of dictionary[bleValueKey][2] )
+		{
+		  k = findKeyPresses( c );
+		  console.log("Key presses : " + k[0] + ", " + k[1]);
+		  
+		  const buffer2byte = new ArrayBuffer(2);
+		  const u8A = new Uint8Array(buffer2byte);
+		  u8A[0] = 2; u8A[1] = k[0];
+          await modCharacteristic.writeValue(u8A);
+		  
+		  const buffer1byte = new ArrayBuffer(1);
+	      const u8B = new Uint8Array(buffer1byte);
+          u8B[0] = ( k[1] + scramble_offset ) % 256;		  
+ 		  await keyCharacteristic.writeValue(u8B);
+		}
+	  
+		const buffer2byte = new ArrayBuffer(2);
+		const u8A = new Uint8Array(buffer2byte);
+		u8A[0] = 2; u8A[1] = 0;
+		await modCharacteristic.writeValue(u8A);	
+
+        bleStatus.textContent = "Value written successfully!";
+      } catch (err) {
+        bleStatus.textContent = "BLE Write failed: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
