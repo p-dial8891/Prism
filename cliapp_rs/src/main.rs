@@ -47,22 +47,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let chars = prism.characteristics();
 /*
     // find the characteristic we want
-	let KEY_CHAR_UUID : uuid::Uuid = Uuid::try_parse_ascii(b"00006d19-a468-4b3e-99b0-7c1f23675454")
-	.unwrap();
+    let KEY_CHAR_UUID : uuid::Uuid = Uuid::try_parse_ascii(b"00006d19-a468-4b3e-99b0-7c1f23675454")
+    .unwrap();
     let key_char = chars.iter().find(|c| c.uuid == KEY_CHAR_UUID ).unwrap();
 */
     let SEED_CHAR_UUID = Uuid::try_parse_ascii(b"00006d18-a468-4b3e-99b0-7c1f23675454")
-	.unwrap();
-    let seed_char = chars.iter().find(|c| c.uuid == SEED_CHAR_UUID ).
-	unwrap();
-	prism.subscribe( seed_char ).await?;
-	let mut prism_streams = prism.notifications().await?;
+    .unwrap();
+    let seed_char = chars.iter().find(|c| c.uuid == SEED_CHAR_UUID )
+    .unwrap();
+    prism.subscribe( seed_char ).await?;
+    let mut prism_streams = prism.notifications().await?;
 
     loop 
-	{ 
-		if let Some(seed) = prism_streams.next().await
-	    {
-		    println!("{0}",seed.value.iter().nth(0).unwrap());
-	    }
-	};
+    { 
+        if let Some(seed) = prism_streams.next().await
+        {
+            println!("{0}",seed.value.iter().nth(0).unwrap());
+        }
+    };
 }
