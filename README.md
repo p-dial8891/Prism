@@ -17,3 +17,6 @@ Once the communication and USB interface are defined, a frontend to the system w
 Passwords being sensitive data have to be stored and transferred over comm channels securely. To achieve this, the data over Bluetooth has to be encrypted and the passwords stored in the user device have to be encrypted as well. In addition to this, since the software is open source, the system should only work if the personal Bluetooth device has been authenticated. 
 
 So, before enabling the transfer of characters, a token will be sent which will serve as a challenge from the USB-Bluetooth keyboard device to the user's personal smart device. The response to this device will be a 16-byte encrypted block of bytes which will be derived by encrypting the token using a key and initialization vector that can be defined once while configuring the software. This key and IV will be an arbitrary choice by the user and will help in making the system unique to the user thereby preventing unauthorized control of the USB-Bluetooth keyboard. Furthermore, the token will only be sent upon pressing a button which will also initialize the device simultaneously.
+
+### Usage
+![Concept](https://github.com/user-attachments/assets/1b8c81fe-bc2c-43ab-a688-51d66a193520)
