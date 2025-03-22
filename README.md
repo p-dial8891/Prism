@@ -20,3 +20,8 @@ So, before enabling the transfer of characters, a token will be sent which will 
 
 ### Usage
 ![Concept](https://github.com/user-attachments/assets/1b8c81fe-bc2c-43ab-a688-51d66a193520)
+
+### Checkout...
+[Hackster.io article](https://www.hackster.io/hardcoder/project-prism-a-password-manager-like-no-other-65b33d)
+
+[Video](https://www.youtube.com/watch?v=PWb6pFhg7UU)
