@@ -96,6 +96,8 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 
+#include "configs.h"
+
 #ifdef NRF_LOG_INFO
 #undef NRF_LOG_INFO
 #define NRF_LOG_INFO(...)
@@ -104,6 +106,11 @@
 #define BLE_ENABLE
 #define USB_ENABLE
 #define CDC_ENABLE
+
+
+// Macros
+#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+#define STRFY(a)  #a
 
 // forward declerations
 
@@ -975,9 +982,11 @@ static uint8_t m_random_vector[VECTOR_LENGTH];
 
 
 /* Maximum allowed key = 256 bit */
-static uint8_t m_key[32] = {'N', 'O', 'R', 'D', 'I', 'C', ' ',
-                            'S', 'E', 'M', 'I', 'C', 'O', 'N', 'D', 'U', 'C', 'T', 'O', 'R',
-                            'A', 'E', 'S', ' ', 'C', 'B', 'C', ' ', 'T', 'E', 'S', 'T'};
+//static uint8_t m_key[32] = {'N', 'O', 'R', 'D', 'I', 'C', ' ',
+//                            'S', 'E', 'M', 'I', 'C', 'O', 'N', 'D', 'U', 'C', 'T', 'O', 'R',
+//                            'A', 'E', 'S', ' ', 'C', 'B', 'C', ' ', 'T', 'E', 'S', 'T'};
+
+static uint8_t m_key[] = KEY_16_BYTES;
 
 /* Below text is used as plain text for encryption and decryption in AES CBC mode with padding. */
 static char m_plain_text[2] =
@@ -1177,6 +1186,7 @@ static void peer_manager_init(void)
  */
 int main(void)
 {
+    BUILD_BUG_ON( ( sizeof(m_key) - 1 ) != 16 );
 	ret_code_t ret;
 
 #ifdef USB_ENABLE
