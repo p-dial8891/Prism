@@ -8,6 +8,9 @@
 <body>
   <h1>Encrypt & Decrypt a Runtime Dictionary</h1>
 
+  <h2>Select Key File</h2>
+  <input type="file" id="fileInput" accept="application/json">
+	
   <!-- Dictionary Operations -->
   <h2>Manage Runtime Dictionary</h2>
   <button id="addEntryButton">Add Entry to Dictionary</button>
@@ -36,7 +39,7 @@
   <label for="bleValueKey">Enter Key of password to Write :</label>
   <input type="text" id="bleValueKey" />
   <button id="bleWriteButton1">Write to BLE</button>  <p id="bleStatus"></p>
-
+  
   <script>
     // Runtime Dictionary
     const runtimeDictionary = {};
@@ -61,6 +64,25 @@
         alert("All values must be provided!");
       }
     });
+
+    let secretKey;
+	document.getElementById('fileInput').addEventListener('change', function(event) {
+		const file = event.target.files[0];
+		if (!file) {
+			return;
+		}
+		
+		const reader = new FileReader();
+		reader.onload = function(e) {
+			try {
+			  secretKey = JSON.parse(e.target.result);
+			} catch (error) {
+				alert("Invalid secret key.");
+			}
+		};
+		
+		reader.readAsText(file);
+	});
 
     // View Current Dictionary
     function updateDictionaryDisplay() {
@@ -402,7 +424,7 @@
 		  console.log("First Byte:", data[0]);
 		  
 		// Step 6: Generate encrypted text
-		const keyBytes = new TextEncoder().encode("NORDIC SEMICONDU");
+		const keyBytes = new TextEncoder().encode(secretKey['Secret']);
 //		const keyChars = [78, 79, 82, 68, 73, 67, 32, 83, 69, 77, 73, 67, 79, 78, 68, 85];
 //		const keyBytes = new Uint8Array(keyChars);
 //        const keyBytes  = crypto.getRandomValues(new Uint8Array(16));

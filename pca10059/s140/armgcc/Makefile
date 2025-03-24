@@ -314,7 +314,7 @@ LIB_FILES += -lc -lnosys -lm
 .PHONY: default help
 
 # Default target - first one defined
-default: nrf52840_xxaa
+default: nrf52840_xxaa $(PROJ_DIR)/key.json
 
 # Print all targets that can be built
 help:
@@ -332,6 +332,12 @@ include $(TEMPLATE_PATH)/Makefile.common
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
 .PHONY: flash flash_softdevice erase
+
+# Generate the javascript files
+$(PROJ_DIR)/key.json:
+	@echo "{"   > $(PROJ_DIR)/key.json
+	@echo "  \"Secret\": \"$(KEY)\"" >> $(PROJ_DIR)/key.json
+	@echo "}"   >> $(PROJ_DIR)/key.json
 
 # Flash the program
 flash: default
