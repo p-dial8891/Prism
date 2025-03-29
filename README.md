@@ -44,7 +44,7 @@ So, before enabling the transfer of characters, a token will be sent which will 
 - Type in the name of the credential and press the 'Write to BLE' button to send the password. Before doing so, ensure that the terminal on the target computer is in focus and that the cursor is on the password field.
 - If the dongle is reconnected, then make sure to unpair the device from the user device and repeat from start.
 
-### Checkout...
+## Checkout...
 [Hackster.io article](https://www.hackster.io/hardcoder/project-prism-a-password-manager-like-no-other-65b33d)
 
 [Video](https://www.youtube.com/watch?v=PWb6pFhg7UU)
