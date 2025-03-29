@@ -18,8 +18,31 @@ Passwords being sensitive data have to be stored and transferred over comm chann
 
 So, before enabling the transfer of characters, a token will be sent which will serve as a challenge from the USB-Bluetooth keyboard device to the user's personal smart device. The response to this device will be a 16-byte encrypted block of bytes which will be derived by encrypting the token using a key and initialization vector that can be defined once while configuring the software. This key and IV will be an arbitrary choice by the user and will help in making the system unique to the user thereby preventing unauthorized control of the USB-Bluetooth keyboard. Furthermore, the token will only be sent upon pressing a button which will also initialize the device simultaneously.
 
+### Dependencies
+
+1. [NRF5 SDK](https://www.nordicsemi.com/Products/Development-software/nRF5-SDK)
+2. [NRF Connect for Desktop](https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-Desktop/Download)
+3. [MSYS2](https://www.msys2.org/)
+4. ARM GCC Compiler  
+    - Install by typing the following command into MSYS  
+      `pacman -S mingw-w64-x86_64-arm-none-eabi-gcc`
+
 ### Usage
 ![Concept](https://github.com/user-attachments/assets/1b8c81fe-bc2c-43ab-a688-51d66a193520)
+
+- At the command prompt, enter the pca10059/s140/armgcc directory, and make the firmware by entering the below command replacing the "SECRET 16 CHARS!" with your chosen key.  
+` mingw32-make 'KEY="SECRET 16 CHARS!"' `
+- The code should have been compiled and a .hex file generated.
+- The .hex file should be programmed onto the dongle using the nrf connect for desktop programmer. To program the dongle, you need to press the reset button while the dongle is plugged in.
+- Once programmed, the dongle will be detected as a USB HID keyboard. It should also be detectable as a bluetooth peripheral if a device like a smartphone was to scan for it.
+- Copy the webapp.html and key.json file to any device that has a browser like Chrome (Linux support is not available but a command line tool is under development).
+- Open the page in the browser and use the buttons to enter passwords to be stored. Three pieces of information are needed for every credential - email, username, and password (in that order).
+- Enter a master password and 'encrypt and save' to a file which could be stored locally or on the cloud.
+- Once a file is created, load the file by entering the master password again and pressing the decrypt button. Any changes can still be made in the text box displaying the database of passwords. (It is in JSON format so it is human readable and editable).
+- Press the connect button once you are ready and select the bluetooth device - 'Nordic_Blinky'.
+- Press the button on the dongle. This is to verify that the user of the webapp is also the user of the dongle. Behind the scenes, there is a challenge/response mechanism which is initiated from the dongle on pressing the button.
+- Type in the name of the credential and press the 'Write to BLE' button to send the password. Before doing so, ensure that the terminal on the target computer is in focus and that the cursor is on the password field.
+- If the dongle is reconnected, then make sure to unpair the device from the user device and repeat from start.
 
 ### Checkout...
 [Hackster.io article](https://www.hackster.io/hardcoder/project-prism-a-password-manager-like-no-other-65b33d)
